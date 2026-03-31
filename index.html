@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediStore - Medical Store Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">💊</span>
+                    <span class="logo-text">MediStore</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="inventory">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-text">Inventory</span>
+                </li>
+                <li class="nav-item" data-page="billing">
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-text">Billing</span>
+                </li>
+                <li class="nav-item" data-page="customers">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Customers</span>
+                </li>
+                <li class="nav-item" data-page="suppliers">
+                    <span class="nav-icon">🚚</span>
+                    <span class="nav-text">Suppliers</span>
+                </li>
+                <li class="nav-item" data-page="reports">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Reports</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="store-info">
+                    <span class="store-name">My Medical Store</span>
+                    <span class="store-status">Online</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search medicines..." id="globalSearch">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                    <div class="user-profile">
+                        <span class="user-name">Admin</span>
+                        <div class="user-avatar">👤</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-container">
+                <!-- Dashboard Page -->
+                <section class="page active" id="dashboard-page">
+                    <div class="stats-grid">
+                        <div class="stat-card sales">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <h3>Today's Sales</h3>
+                                <p class="stat-value" id="todaySales">₹0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card inventory">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-info">
+                                <h3>Total Medicines</h3>
+                                <p class="stat-value" id="totalMedicines">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card low-stock">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-info">
+                                <h3>Low Stock Items</h3>
+                                <p class="stat-value" id="lowStockItems">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card customers">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-info">
+                                <h3>Total Customers</h3>
+                                <p class="stat-value" id="totalCustomers">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card recent-transactions">
+                            <div class="card-header">
+                                <h2>Recent Transactions</h2>
+                                <button class="btn-link" onclick="showPage('billing')">View All</button>
+                            </div>
+                            <div class="card-body">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <tr class="empty-row">
+                                            <td colspan="4">No transactions yet</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card expiring-medicines">
+                            <div class="card-header">
+                                <h2>Expiring Soon (30 days)</h2>
+                                <button class="btn-link" onclick="showPage('inventory')">View All</button>
+                            </div>
+                            <div class="card-body">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Medicine</th>
+                                            <th>Expiry Date</th>
+                                            <th>Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="expiringMedicines">
+                                        <tr class="empty-row">
+                                            <td colspan="3">No medicines expiring soon</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Inventory Page -->
+                <section class="page" id="inventory-page">
+                    <div class="page-actions">
+                        <h2>Medicine Inventory</h2>
+                        <button class="btn btn-primary" onclick="openMedicineModal()">+ Add Medicine</button>
+                    </div>
+                    
+                    <div class="filters-bar">
+                        <input type="text" placeholder="Search medicines..." id="medicineSearch" class="filter-input">
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <select id="stockFilter" class="filter-select">
+                            <option value="">All Stock</option>
+                            <option value="low">Low Stock</option>
+                            <option value="out">Out of Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Batch #</th>
+                                    <th>Expiry</th>
+                                    <th>Quantity</th>
+                                    <th>Purchase Price</th>
+                                    <th>Selling Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="medicineTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="8">No medicines in inventory. Click "Add Medicine" to add one.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Billing Page -->
+                <section class="page" id="billing-page">
+                    <div class="billing-container">
+                        <div class="billing-form">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>New Bill</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>Customer</label>
+                                        <select id="billCustomer" class="form-control">
+                                            <option value="">Walk-in Customer</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Add Medicine</label>
+                                        <div class="medicine-add-row">
+                                            <select id="billMedicine" class="form-control">
+                                                <option value="">Select Medicine</option>
+                                            </select>
+                                            <input type="number" id="billQuantity" class="form-control qty-input" placeholder="Qty" min="1" value="1">
+                                            <button class="btn btn-secondary" onclick="addToBill()">Add</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="bill-items-container">
+                                        <table class="bill-items-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Medicine</th>
+                                                    <th>Qty</th>
+                                                    <th>Price</th>
+                                                    <th>Total</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="billItemsBody">
+                                                <tr class="empty-row">
+                                                    <td colspan="5">No items added</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="bill-summary">
+                                        <div class="summary-row">
+                                            <span>Subtotal:</span>
+                                            <span id="billSubtotal">₹0.00</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span>Discount (%):</span>
+                                            <input type="number" id="billDiscount" class="form-control discount-input" value="0" min="0" max="100" onchange="updateBillTotal()">
+                                        </div>
+                                        <div class="summary-row total">
+                                            <span>Total:</span>
+                                            <span id="billTotal">₹0.00</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button class="btn btn-secondary" onclick="clearBill()">Clear</button>
+                                        <button class="btn btn-primary" onclick="generateBill()">Generate Bill</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="billing-history">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Recent Bills</h2>
+                                </div>
+                                <div class="card-body">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Invoice #</th>
+                                                <th>Customer</th>
+                                                <th>Items</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="billsTableBody">
+                                            <tr class="empty-row">
+                                                <td colspan="6">No bills generated yet</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Customers Page -->
+                <section class="page" id="customers-page">
+                    <div class="page-actions">
+                        <h2>Customer Management</h2>
+                        <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
+                    </div>
+                    
+                    <div class="filters-bar">
+                        <input type="text" placeholder="Search customers..." id="customerSearch" class="filter-input">
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Address</th>
+                                    <th>Total Purchases</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="6">No customers added yet. Click "Add Customer" to add one.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Suppliers Page -->
+                <section class="page" id="suppliers-page">
+                    <div class="page-actions">
+                        <h2>Supplier Management</h2>
+                        <button class="btn btn-primary" onclick="openSupplierModal()">+ Add Supplier</button>
+                    </div>
+                    
+                    <div class="filters-bar">
+                        <input type="text" placeholder="Search suppliers..." id="supplierSearch" class="filter-input">
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Company Name</th>
+                                    <th>Contact Person</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Address</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplierTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="6">No suppliers added yet. Click "Add Supplier" to add one.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Reports Page -->
+                <section class="page" id="reports-page">
+                    <div class="reports-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Sales Report</h2>
+                                <div class="report-filters">
+                                    <input type="date" id="salesStartDate" class="filter-input">
+                                    <input type="date" id="salesEndDate" class="filter-input">
+                                    <button class="btn btn-secondary" onclick="generateSalesReport()">Generate</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="report-summary">
+                                    <div class="report-stat">
+                                        <h4>Total Sales</h4>
+                                        <p id="reportTotalSales">₹0</p>
+                                    </div>
+                                    <div class="report-stat">
+                                        <h4>Total Bills</h4>
+                                        <p id="reportTotalBills">0</p>
+                                    </div>
+                                    <div class="report-stat">
+                                        <h4>Avg. Bill Value</h4>
+                                        <p id="reportAvgBill">₹0</p>
+                                    </div>
+                                </div>
+                                <div class="report-table">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Invoice #</th>
+                                                <th>Customer</th>
+                                                <th>Items</th>
+                                                <th>Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="salesReportBody">
+                                            <tr class="empty-row">
+                                                <td colspan="5">Select date range and click Generate</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Inventory Report</h2>
+                                <button class="btn btn-secondary" onclick="generateInventoryReport()">Generate</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="report-summary">
+                                    <div class="report-stat">
+                                        <h4>Total Items</h4>
+                                        <p id="invReportTotal">0</p>
+                                    </div>
+                                    <div class="report-stat">
+                                        <h4>Low Stock</h4>
+                                        <p id="invReportLowStock">0</p>
+                                    </div>
+                                    <div class="report-stat">
+                                        <h4>Expiring Soon</h4>
+                                        <p id="invReportExpiring">0</p>
+                                    </div>
+                                    <div class="report-stat">
+                                        <h4>Stock Value</h4>
+                                        <p id="invReportValue">₹0</p>
+                                    </div>
+                                </div>
+                                <div class="report-table">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Medicine</th>
+                                                <th>Category</th>
+                                                <th>Quantity</th>
+                                                <th>Stock Value</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inventoryReportBody">
+                                            <tr class="empty-row">
+                                                <td colspan="5">Click Generate to view report</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Medicine Modal -->
+    <div class="modal" id="medicineModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="medicineModalTitle">Add Medicine</h2>
+                <button class="modal-close" onclick="closeMedicineModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="medicineForm">
+                    <input type="hidden" id="medicineId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Medicine Name *</label>
+                            <input type="text" id="medicineName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="medicineCategory" class="form-control" required>
+                                <option value="">Select Category</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Capsule">Capsule</option>
+                                <option value="Syrup">Syrup</option>
+                                <option value="Injection">Injection</option>
+                                <option value="Ointment">Ointment</option>
+                                <option value="Drops">Drops</option>
+                                <option value="Inhaler">Inhaler</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Batch Number *</label>
+                            <input type="text" id="medicineBatch" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date *</label>
+                            <input type="date" id="medicineExpiry" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantity *</label>
+                            <input type="number" id="medicineQuantity" class="form-control" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Min Stock Level</label>
+                            <input type="number" id="medicineMinStock" class="form-control" min="0" value="10">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Purchase Price (₹) *</label>
+                            <input type="number" id="medicinePurchasePrice" class="form-control" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Selling Price (₹) *</label>
+                            <input type="number" id="medicineSellingPrice" class="form-control" min="0" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Supplier</label>
+                            <select id="medicineSupplier" class="form-control">
+                                <option value="">Select Supplier</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Manufacturer</label>
+                            <input type="text" id="medicineManufacturer" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="medicineDescription" class="form-control" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMedicineModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveMedicine()">Save Medicine</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div class="modal" id="customerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="customerModalTitle">Add Customer</h2>
+                <button class="modal-close" onclick="closeCustomerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <input type="hidden" id="customerId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="customerName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone *</label>
+                            <input type="tel" id="customerPhone" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="customerEmail" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" id="customerDob" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="customerAddress" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Medical Notes</label>
+                        <textarea id="customerNotes" class="form-control" rows="2" placeholder="Allergies, conditions, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCustomerModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Modal -->
+    <div class="modal" id="supplierModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="supplierModalTitle">Add Supplier</h2>
+                <button class="modal-close" onclick="closeSupplierModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="supplierForm">
+                    <input type="hidden" id="supplierId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Company Name *</label>
+                            <input type="text" id="supplierCompany" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Person *</label>
+                            <input type="text" id="supplierContact" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone *</label>
+                            <input type="tel" id="supplierPhone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="supplierEmail" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="supplierAddress" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>GST Number</label>
+                            <input type="text" id="supplierGst" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>License Number</label>
+                            <input type="text" id="supplierLicense" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSupplierModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSupplier()">Save Supplier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bill Preview Modal -->
+    <div class="modal" id="billPreviewModal">
+        <div class="modal-content bill-preview">
+            <div class="modal-header">
+                <h2>Bill Preview</h2>
+                <button class="modal-close" onclick="closeBillPreview()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="billPreviewContent" class="bill-print-area"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBillPreview()">Close</button>
+                <button class="btn btn-primary" onclick="printBill()">🖨️ Print Bill</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
