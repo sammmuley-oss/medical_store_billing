@@ -11,6 +11,48 @@ class DataStore {
         this.loaded = false;
     }
 
+    isRetryableError(error) {
+        if (!error) return false;
+
+        const code = error.code || '';
+        const message = (error.message || '').toLowerCase();
+        const details = (error.details || '').toLowerCase();
+
+        return code === 'PGRST002' ||
+               message.includes('failed to fetch') ||
+               message.includes('schema cache') ||
+               details.includes('schema cache');
+    }
+
+    async queryWithRetry(queryFn, maxAttempts = 4) {
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                const { data, error } = await queryFn();
+
+                if (!error) {
+                    return data || [];
+                }
+
+                lastError = error;
+                if (!this.isRetryableError(error) || attempt === maxAttempts) {
+                    throw error;
+                }
+            } catch (error) {
+                lastError = error;
+                if (!this.isRetryableError(error) || attempt === maxAttempts) {
+                    throw error;
+                }
+            }
+
+            const backoffMs = attempt * 1000;
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
+        }
+
+        throw lastError;
+    }
+
     async init() {
         try {
             await Promise.all([
@@ -28,39 +70,40 @@ class DataStore {
     }
 
     async loadMedicines() {
-        const { data, error } = await supabaseClient
-            .from('medicines')
-            .select('*')
-            .order('name');
-        if (error) throw error;
-        this.medicines = data || [];
+        this.medicines = await this.queryWithRetry(() =>
+            supabaseClient
+                .from('medicines')
+                .select('*')
+                .order('name')
+        );
     }
 
     async loadCustomers() {
-        const { data, error } = await supabaseClient
-            .from('customers')
-            .select('*')
-            .order('name');
-        if (error) throw error;
-        this.customers = data || [];
+        this.customers = await this.queryWithRetry(() =>
+            supabaseClient
+                .from('customers')
+                .select('*')
+                .order('name')
+        );
     }
 
     async loadSuppliers() {
-        const { data, error } = await supabaseClient
-            .from('suppliers')
-            .select('*')
-            .order('company');
-        if (error) throw error;
-        this.suppliers = data || [];
+        this.suppliers = await this.queryWithRetry(() =>
+            supabaseClient
+                .from('suppliers')
+                .select('*')
+                .order('company')
+        );
     }
 
     async loadBills() {
-        const { data, error } = await supabaseClient
-            .from('bills')
-            .select('*, bill_items(*)')
-            .order('created_at', { ascending: false })
-            .limit(100);
-        if (error) throw error;
+        const data = await this.queryWithRetry(() =>
+            supabaseClient
+                .from('bills')
+                .select('*, bill_items(*)')
+                .order('created_at', { ascending: false })
+                .limit(100)
+        );
         this.bills = (data || []).map(bill => ({
             ...bill,
             items: bill.bill_items || [],
