@@ -92,19 +92,19 @@ E-bill delivery uses a themed status toast:
 
 ```text
 medical_store_billing/
-â”œâ”€â”€ api/
-â”‚   â””â”€â”€ send-invoice-email.js       # Vercel Node.js email endpoint
-â”œâ”€â”€ supabase/
-â”‚   â””â”€â”€ functions/
-â”‚       â””â”€â”€ send-invoice-email/     # Supabase Edge Function implementation
-â”œâ”€â”€ app.js                          # UI, CRUD, billing, reports, and Supabase calls
-â”œâ”€â”€ config.js                       # Supabase URL and publishable key
-â”œâ”€â”€ index.html                      # Dashboard markup and modals
-â”œâ”€â”€ styles.css                      # Application styling and responsive layout
-â”œâ”€â”€ schema.sql                      # Tables, indexes, triggers, and RLS policies
-â”œâ”€â”€ package.json                    # Node dependency configuration
-â”œâ”€â”€ EMAIL_SETUP.md                  # Email configuration notes
-â””â”€â”€ README.md                       # Project documentation
+|-- api/
+|   `-- send-invoice-email.js       # Vercel Node.js email endpoint
+|-- supabase/
+|   `-- functions/
+|       `-- send-invoice-email/     # Supabase Edge Function implementation
+|-- app.js                          # UI, CRUD, billing, reports, and Supabase calls
+|-- config.js                       # Supabase URL and publishable key
+|-- index.html                      # Dashboard markup and modals
+|-- styles.css                      # Application styling and responsive layout
+|-- schema.sql                      # Tables, indexes, triggers, and RLS policies
+|-- package.json                    # Node dependency configuration
+|-- EMAIL_SETUP.md                  # Email configuration notes
+`-- README.md                       # Project documentation
 ```
 
 ## Data model
