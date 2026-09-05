@@ -116,6 +116,32 @@ CREATE TRIGGER update_suppliers_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- RLS policies for the current admin-only frontend
+-- ============================================
+-- The app currently uses the public anon key and has no authentication flow.
+-- Replace these policies with authenticated user policies when login is added.
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE medicines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bill_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can manage suppliers" ON suppliers;
+CREATE POLICY "Public can manage suppliers" ON suppliers FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public can manage customers" ON customers;
+CREATE POLICY "Public can manage customers" ON customers FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public can manage medicines" ON medicines;
+CREATE POLICY "Public can manage medicines" ON medicines FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public can manage bills" ON bills;
+CREATE POLICY "Public can manage bills" ON bills FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public can manage bill items" ON bill_items;
+CREATE POLICY "Public can manage bill items" ON bill_items FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ============================================
 -- Sample Data
 -- ============================================
 INSERT INTO suppliers (company, contact, phone, email, address, gst, license) VALUES
