@@ -544,6 +544,38 @@ function clearBill() {
     updateBillTotal();
 }
 
+async function sendInvoiceEmail(bill, customer, items) {
+    if (!customer || !customer.email) {
+        return { sent: false, reason: 'no-email' };
+    }
+
+    try {
+        const response = await fetch('/api/send-invoice-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bill,
+                customer: {
+                    name: customer.name,
+                    email: customer.email
+                },
+                items
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok || result.sent !== true) {
+            console.error('Invoice email failed:', result.error || 'Email was not confirmed as sent');
+            return { sent: false, reason: 'delivery-failed' };
+        }
+
+        return { sent: true };
+    } catch (error) {
+        console.error('Invoice email failed:', error);
+        return { sent: false, reason: 'delivery-failed' };
+    }
+}
+
 async function generateBill() {
     if (currentBillItems.length === 0) {
         alert('Please add items to the bill');
@@ -623,11 +655,22 @@ async function generateBill() {
             discountAmount: discountAmount,
             date: bill.created_at
         };
+
+        const customer = customerId ? store.customers.find(c => c.id === customerId) : null;
+        const emailResult = await sendInvoiceEmail(billForPreview, customer, currentBillItems);
         
         showBillPreview(billForPreview);
         clearBill();
         renderBillsTable();
         updateDashboard();
+
+        if (emailResult.sent) {
+            alert(`Bill generated and emailed to ${customer.email}`);
+        } else if (emailResult.reason === 'no-email') {
+            alert('Bill generated. This customer does not have an email address.');
+        } else {
+            alert('Bill generated, but the e-bill email could not be sent.');
+        }
     } catch (error) {
         alert('Error generating bill: ' + error.message);
     }
