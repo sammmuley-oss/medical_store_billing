@@ -941,6 +941,56 @@ body {
     
     .main-content {
         margin-left: 0;
+
+    /* E-bill status toast */
+    .email-toast {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: min(420px, calc(100vw - 32px));
+        padding: 14px 18px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        color: #fff;
+        box-shadow: var(--shadow-lg);
+        font-size: 14px;
+        font-weight: 600;
+        opacity: 0;
+        transform: translateY(-16px);
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .email-toast.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .email-toast.success {
+        background: #15803d;
+        border-color: #166534;
+    }
+
+    .email-toast.error {
+        background: #b91c1c;
+        border-color: #991b1b;
+    }
+
+    .email-toast-icon {
+        display: grid;
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        place-items: center;
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        border-radius: 50%;
+        font-size: 15px;
+        line-height: 1;
+    }
     }
     
     .bill-print-area {

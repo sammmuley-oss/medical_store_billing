@@ -544,6 +544,24 @@ function clearBill() {
     updateBillTotal();
 }
 
+let emailToastTimer;
+
+function showEmailToast(message, type) {
+    const toast = document.getElementById('emailToast');
+    const toastMessage = document.getElementById('emailToastMessage');
+    const toastIcon = toast.querySelector('.email-toast-icon');
+
+    clearTimeout(emailToastTimer);
+    toast.className = `email-toast ${type}`;
+    toastMessage.textContent = message;
+    toastIcon.textContent = type === 'success' ? '✓' : '!';
+
+    requestAnimationFrame(() => toast.classList.add('visible'));
+    emailToastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+    }, 5000);
+}
+
 async function sendInvoiceEmail(bill, customer, items) {
     if (!customer || !customer.email) {
         return { sent: false, reason: 'no-email' };
@@ -665,11 +683,11 @@ async function generateBill() {
         updateDashboard();
 
         if (emailResult.sent) {
-            alert(`Bill generated and emailed to ${customer.email}`);
+            showEmailToast(`E-bill sent successfully to ${customer.email}`, 'success');
         } else if (emailResult.reason === 'no-email') {
-            alert('Bill generated. This customer does not have an email address.');
+            showEmailToast('E-bill was not sent: this customer has no email address.', 'error');
         } else {
-            alert('Bill generated, but the e-bill email could not be sent.');
+            showEmailToast('E-bill could not be sent. Please check the email service.', 'error');
         }
     } catch (error) {
         alert('Error generating bill: ' + error.message);
